@@ -14,8 +14,7 @@ from .utils import _get_status
 @attr(operation='Verify Put User Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_put_user_policy_40447():
-    """TEST-40447"""
+def test_put_user_policy():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
@@ -34,8 +33,7 @@ def test_put_user_policy_40447():
 @attr(operation='Verify Put User Policy with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_put_user_policy_invalid_user_40449():
-    """TEST-40449"""
+def test_put_user_policy_invalid_user():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
@@ -56,8 +54,7 @@ def test_put_user_policy_invalid_user_40449():
 @attr(operation='Verify Put User Policy using parameter value outside limit')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_put_user_policy_parameter_limit_40450():
-    """TEST-40450"""
+def test_put_user_policy_parameter_limit():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
@@ -83,8 +80,7 @@ def test_put_user_policy_parameter_limit_40450():
 @attr(operation='Verify Put User Policy using invalid policy document elements')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_put_user_policy_invalid_element_40451():
-    """TEST-40451"""
+def test_put_user_policy_invalid_element():
     client = get_tenant_iam_client()
 
     # With Version other than 2012-10-17
@@ -166,8 +162,7 @@ def test_put_user_policy_invalid_element_40451():
 @attr(operation='Verify Put a policy that already exists')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_put_existing_user_policy_40452():
-    """TEST-40452"""
+def test_put_existing_user_policy():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
@@ -188,8 +183,7 @@ def test_put_existing_user_policy_40452():
 @attr(operation='Verify List User policies')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_list_user_policy_40453():
-    """TEST-40453"""
+def test_list_user_policy():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
@@ -210,8 +204,7 @@ def test_list_user_policy_40453():
 @attr(operation='Verify List User policies with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_list_user_policy_invalid_user_40454():
-    """TEST-40454"""
+def test_list_user_policy_invalid_user_():
     client = get_tenant_iam_client()
     e = assert_raises(ClientError, client.list_user_policies, UserName="some-non-existing-user-id")
     status = _get_status(e.response)
