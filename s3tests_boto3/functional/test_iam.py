@@ -58,16 +58,12 @@ def test_put_user_policy_parameter_limit():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                             {
-                                 "Effect": "Allow",
-                                 "Action": "*",
-                                 "Resource": "*"
-                             }
-                         ] * 1000
-        }
+        {"Version": "2012-10-17",
+         "Statement": [{
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}] * 1000
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy' * 10, UserName="some-non-existing-user-id")
@@ -85,16 +81,12 @@ def test_put_user_policy_invalid_element():
 
     # With Version other than 2012-10-17
     policy_document = json.dumps(
-        {
-            "Version": "2010-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*"
-                }
-            ]
-        }
+        {"Version": "2010-10-17",
+         "Statement": [{
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}]
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
@@ -114,23 +106,17 @@ def test_put_user_policy_invalid_element():
 
     # with same Sid for 2 statements
     policy_document = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "98AB54CF",
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*"
-                },
-                {
-                    "Sid": "98AB54CF",
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*"
-                }
-            ]
-        }
+        {"Version": "2012-10-17",
+         "Statement": [
+             {"Sid": "98AB54CF",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"},
+             {"Sid": "98AB54CF",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"}]
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
@@ -139,17 +125,13 @@ def test_put_user_policy_invalid_element():
 
     # with Principal
     policy_document = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*",
-                    "Principal": "arn:aws:iam:::username"
-                }
-            ]
-        }
+        {"Version": "2012-10-17",
+         "Statement": [{
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*",
+             "Principal": "arn:aws:iam:::username"}]
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
@@ -170,7 +152,8 @@ def test_put_existing_user_policy():
          "Statement": {
              "Effect": "Allow",
              "Action": "*",
-             "Resource": "*"}}
+             "Resource": "*"}
+         }
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
@@ -191,7 +174,8 @@ def test_list_user_policy():
          "Statement": {
              "Effect": "Allow",
              "Action": "*",
-             "Resource": "*"}}
+             "Resource": "*"}
+         }
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
@@ -204,7 +188,7 @@ def test_list_user_policy():
 @attr(operation='Verify List User policies with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
-def test_list_user_policy_invalid_user_():
+def test_list_user_policy_invalid_user():
     client = get_tenant_iam_client()
     e = assert_raises(ClientError, client.list_user_policies, UserName="some-non-existing-user-id")
     status = _get_status(e.response)
