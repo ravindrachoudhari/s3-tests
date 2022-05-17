@@ -196,3 +196,224 @@ def test_list_user_policy_invalid_user():
     e = assert_raises(ClientError, client.list_user_policies, UserName="some-non-existing-user-id")
     status = _get_status(e.response)
     eq(status, 404)
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get User policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_get_user_policy():
+    client = get_tenant_iam_client()
+
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
+                           UserName=get_tenant_user_id())
+    client.get_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get User Policy with invalid user')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_get_user_policy_invalid_user():
+    client = get_tenant_iam_client()
+
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
+                           UserName=get_tenant_user_id())
+    e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
+                      UserName="some-non-existing-user-id")
+    status = _get_status(e.response)
+    eq(status, 404)
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get User Policy with invalid policy name')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_get_user_policy_invalid_policy_name():
+    client = get_tenant_iam_client()
+
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
+                           UserName=get_tenant_user_id())
+    e = assert_raises(ClientError, client.get_user_policy, PolicyName='non-existing-policy-name',
+                      UserName=get_tenant_user_id())
+    status = _get_status(e.response)
+    eq(status, 404)
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get Deleted User Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_get_deleted_user_policy():
+    client = get_tenant_iam_client()
+
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
+                           UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+    e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
+                      UserName=get_tenant_user_id())
+    status = _get_status(e.response)
+    eq(status, 404)
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get a policy from multiple policies for a user')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_get_user_policy_from_multiple_policies():
+    client = get_tenant_iam_client()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy1',
+                           UserName=get_tenant_user_id())
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy2',
+                           UserName=get_tenant_user_id())
+    client.get_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllowAccessPolicy1', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='delete')
+@attr(operation='Verify Delete User Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_delete_user_policy():
+    client = get_tenant_iam_client()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
+                           UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+    e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
+                      UserName=get_tenant_user_id())
+    status = _get_status(e.response)
+    eq(status, 404)
+
+
+@attr(resource='user-policy')
+@attr(method='delete')
+@attr(operation='Verify Delete User Policy with invalid user')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_delete_user_policy_invalid_user():
+    client = get_tenant_iam_client()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
+                           UserName=get_tenant_user_id())
+    e = assert_raises(ClientError, client.delete_user_policy, PolicyName='AllAccessPolicy',
+                      UserName="some-non-existing-user-id")
+    status = _get_status(e.response)
+    eq(status, 404)
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='delete')
+@attr(operation='Verify Delete User Policy with invalid policy name')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_delete_user_policy_invalid_policy_name():
+    client = get_tenant_iam_client()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
+                           UserName=get_tenant_user_id())
+    e = assert_raises(ClientError, client.delete_user_policy, PolicyName='non-existing-policy-name',
+                      UserName=get_tenant_user_id())
+    status = _get_status(e.response)
+    eq(status, 404)
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='delete')
+@attr(operation='Verify Delete multiple User policies for a user')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_delete_user_policy_from_multiple_policies():
+    client = get_tenant_iam_client()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy1',
+                           UserName=get_tenant_user_id())
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy2',
+                           UserName=get_tenant_user_id())
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy3',
+                           UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllowAccessPolicy1', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
+    client.get_user_policy(PolicyName='AllowAccessPolicy3', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllowAccessPolicy3', UserName=get_tenant_user_id())
