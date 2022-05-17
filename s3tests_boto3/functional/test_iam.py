@@ -231,6 +231,8 @@ def test_get_user_policy():
 
     client.get_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+
 
 @attr(resource='user-policy')
 @attr(method='get')
@@ -255,6 +257,8 @@ def test_get_user_policy_invalid_user():
     status = _get_status(e.response)
     eq(status, 404)
 
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+
 
 @attr(resource='user-policy')
 @attr(method='get')
@@ -278,6 +282,8 @@ def test_get_user_policy_invalid_policy_name():
                       UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 404)
+
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -329,6 +335,10 @@ def test_get_user_policy_from_multiple_policies():
                            UserName=get_tenant_user_id())
 
     client.get_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
+
+    client.delete_user_policy(PolicyName='AllowAccessPolicy1', UserName=get_tenant_user_id())
+
+    client.delete_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -382,6 +392,8 @@ def test_delete_user_policy_invalid_user():
     status = _get_status(e.response)
     eq(status, 404)
 
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+
 
 @attr(resource='user-policy')
 @attr(method='delete')
@@ -406,6 +418,8 @@ def test_delete_user_policy_invalid_policy_name():
                       UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 404)
+
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -438,3 +452,5 @@ def test_delete_user_policy_from_multiple_policies():
     client.delete_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
 
     client.get_user_policy(PolicyName='AllowAccessPolicy3', UserName=get_tenant_user_id())
+
+    client.delete_user_policy(PolicyName='AllowAccessPolicy3', UserName=get_tenant_user_id())
