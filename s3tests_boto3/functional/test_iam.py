@@ -26,6 +26,7 @@ def test_put_user_policy():
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -58,16 +59,12 @@ def test_put_user_policy_parameter_limit():
     client = get_tenant_iam_client()
 
     policy_document = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                             {
-                                 "Effect": "Allow",
-                                 "Action": "*",
-                                 "Resource": "*"
-                             }
-                         ] * 1000
-        }
+        {"Version": "2012-10-17",
+         "Statement": [{
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}] * 1000
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy' * 10, UserName="some-non-existing-user-id")
@@ -85,16 +82,12 @@ def test_put_user_policy_invalid_element():
 
     # With Version other than 2012-10-17
     policy_document = json.dumps(
-        {
-            "Version": "2010-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*"
-                }
-            ]
-        }
+        {"Version": "2010-10-17",
+         "Statement": [{
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}]
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
@@ -114,23 +107,17 @@ def test_put_user_policy_invalid_element():
 
     # with same Sid for 2 statements
     policy_document = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "98AB54CF",
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*"
-                },
-                {
-                    "Sid": "98AB54CF",
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*"
-                }
-            ]
-        }
+        {"Version": "2012-10-17",
+         "Statement": [
+             {"Sid": "98AB54CF",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"},
+             {"Sid": "98AB54CF",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"}]
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
@@ -139,17 +126,13 @@ def test_put_user_policy_invalid_element():
 
     # with Principal
     policy_document = json.dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": "*",
-                    "Resource": "*",
-                    "Principal": "arn:aws:iam:::username"
-                }
-            ]
-        }
+        {"Version": "2012-10-17",
+         "Statement": [{
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*",
+             "Principal": "arn:aws:iam:::username"}]
+         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
                       PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
@@ -170,12 +153,14 @@ def test_put_existing_user_policy():
          "Statement": {
              "Effect": "Allow",
              "Action": "*",
-             "Resource": "*"}}
+             "Resource": "*"}
+         }
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -191,12 +176,14 @@ def test_list_user_policy():
          "Statement": {
              "Effect": "Allow",
              "Action": "*",
-             "Resource": "*"}}
+             "Resource": "*"}
+         }
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
     response = client.list_user_policies(UserName=get_tenant_user_id())
     eq("AllAccessPolicy" in response["PolicyNames"], True)
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -228,9 +215,7 @@ def test_get_user_policy():
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
-
     client.get_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
@@ -251,12 +236,10 @@ def test_get_user_policy_invalid_user():
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
-
     e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
                       UserName="some-non-existing-user-id")
     status = _get_status(e.response)
     eq(status, 404)
-
     client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
@@ -277,12 +260,10 @@ def test_get_user_policy_invalid_policy_name():
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
-
     e = assert_raises(ClientError, client.get_user_policy, PolicyName='non-existing-policy-name',
                       UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 404)
-
     client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
@@ -303,9 +284,7 @@ def test_get_deleted_user_policy():
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
-
     e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
                       UserName=get_tenant_user_id())
     status = _get_status(e.response)
@@ -330,14 +309,10 @@ def test_get_user_policy_from_multiple_policies():
 
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy1',
                            UserName=get_tenant_user_id())
-
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy2',
                            UserName=get_tenant_user_id())
-
     client.get_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy1', UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
 
 
@@ -359,9 +334,7 @@ def test_delete_user_policy():
 
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
                            UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
-
     e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
                       UserName=get_tenant_user_id())
     status = _get_status(e.response)
@@ -386,12 +359,10 @@ def test_delete_user_policy_invalid_user():
 
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
                            UserName=get_tenant_user_id())
-
     e = assert_raises(ClientError, client.delete_user_policy, PolicyName='AllAccessPolicy',
                       UserName="some-non-existing-user-id")
     status = _get_status(e.response)
     eq(status, 404)
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
 
 
@@ -413,12 +384,10 @@ def test_delete_user_policy_invalid_policy_name():
 
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
                            UserName=get_tenant_user_id())
-
     e = assert_raises(ClientError, client.delete_user_policy, PolicyName='non-existing-policy-name',
                       UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 404)
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
 
 
@@ -440,17 +409,11 @@ def test_delete_user_policy_from_multiple_policies():
 
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy1',
                            UserName=get_tenant_user_id())
-
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy2',
                            UserName=get_tenant_user_id())
-
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy3',
                            UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy1', UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy2', UserName=get_tenant_user_id())
-
     client.get_user_policy(PolicyName='AllowAccessPolicy3', UserName=get_tenant_user_id())
-
     client.delete_user_policy(PolicyName='AllowAccessPolicy3', UserName=get_tenant_user_id())
