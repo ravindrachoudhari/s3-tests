@@ -26,6 +26,7 @@ def test_put_user_policy():
     )
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -159,6 +160,7 @@ def test_put_existing_user_policy():
                            UserName=get_tenant_user_id())
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
                            UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
@@ -181,6 +183,7 @@ def test_list_user_policy():
                            UserName=get_tenant_user_id())
     response = client.list_user_policies(UserName=get_tenant_user_id())
     eq("AllAccessPolicy" in response["PolicyNames"], True)
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
 
 
 @attr(resource='user-policy')
