@@ -1,8 +1,8 @@
 import json
-from operator import eq
 
 from botocore.exceptions import ClientError
 from nose.plugins.attrib import attr
+from nose.tools import eq_ as eq
 
 from s3tests.functional.utils import assert_raises
 from . import get_tenant_iam_client, get_tenant_user_id
@@ -67,7 +67,7 @@ def test_put_user_policy_parameter_limit():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy' * 10, UserName="some-non-existing-user-id")
+                      PolicyName='AllAccessPolicy' * 10, UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -90,7 +90,7 @@ def test_put_user_policy_invalid_element():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
+                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -101,7 +101,7 @@ def test_put_user_policy_invalid_element():
         }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
+                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -120,7 +120,7 @@ def test_put_user_policy_invalid_element():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
+                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -135,7 +135,7 @@ def test_put_user_policy_invalid_element():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName="some-non-existing-user-id")
+                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -335,10 +335,6 @@ def test_delete_user_policy():
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
                            UserName=get_tenant_user_id())
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
-    e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
-                      UserName=get_tenant_user_id())
-    status = _get_status(e.response)
-    eq(status, 404)
 
 
 @attr(resource='user-policy')
