@@ -548,7 +548,7 @@ def test_deny_object_actions_in_user_policy():
              "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
              "Resource": f"arn:aws:s3:::{bucket}/*"}}
     )
-    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='DenyAccessPolicy',
                            UserName=get_tenant_user_id())
 
     s3_client = get_client()
@@ -565,4 +565,4 @@ def test_deny_object_actions_in_user_policy():
     eq(status, 403)
     eq(error_code, 'AccessDenied')
     s3_client.delete_bucket(Bucket=bucket)
-    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='DenyAccessPolicy', UserName=get_tenant_user_id())
