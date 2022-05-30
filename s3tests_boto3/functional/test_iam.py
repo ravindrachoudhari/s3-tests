@@ -485,11 +485,13 @@ def test_deny_bucket_actions_in_user_policy():
     s3_client = get_client()
 
     e = assert_raises(ClientError, s3_client.list_buckets, Bucket=bucket)
-    status = _get_status(e.response)
+    status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
+    eq(error_code, 'AccessDenied')
     e = assert_raises(ClientError, s3_client.delete_bucket, Bucket=bucket)
-    status = _get_status(e.response)
+    status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
+    eq(error_code, 'AccessDenied')
     client.delete_user_policy(PolicyName='DenyAccessPolicy', UserName=get_tenant_user_id())
     s3_client.delete_bucket(Bucket=bucket)
 
@@ -526,7 +528,6 @@ def test_allow_object_actions_in_user_policy():
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 404)
     eq(error_code, 'NoSuchKey')
-
     s3_client.delete_bucket(Bucket=bucket)
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
 
@@ -552,14 +553,16 @@ def test_deny_object_actions_in_user_policy():
 
     s3_client = get_client()
     e = assert_raises(ClientError, s3_client.put_object, Bucket=bucket, Key='foo')
-    status = _get_status(e.response)
+    status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
+    eq(error_code, 'AccessDenied')
     e = assert_raises(ClientError, s3_client.get_object, Bucket=bucket, Key='foo')
-    status = _get_status(e.response)
+    status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
+    eq(error_code, 'AccessDenied')
     e = assert_raises(ClientError, s3_client.delete_object, Bucket=bucket, Key='foo')
-    status = _get_status(e.response)
+    status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
-
+    eq(error_code, 'AccessDenied')
     s3_client.delete_bucket(Bucket=bucket)
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
