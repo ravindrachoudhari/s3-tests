@@ -5,6 +5,7 @@ from nose.plugins.attrib import attr
 from nose.tools import eq_ as eq
 
 from s3tests.functional.utils import assert_raises
+from s3tests_boto3.functional.test_s3 import _multipart_upload
 from . import (
     get_tenant_iam_client,
     get_client,
@@ -564,5 +565,73 @@ def test_deny_object_actions_in_user_policy():
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
+    s3_client.delete_bucket(Bucket=bucket)
+    client.delete_user_policy(PolicyName='DenyAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Allow Multipart Actions in user Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_allow_multipart_actions_in_user_policy():
+    client = get_tenant_iam_client()
+    bucket = get_new_bucket()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": ["s3:ListBucketMultipartUploads", "s3:AbortMultipartUpload"],
+             "Resource": "arn:aws:s3:::*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
+                           UserName=get_tenant_user_id())
+    key = "mymultipart"
+    mb = 1024 * 1024
+    s3_client = get_client()
+
+    (upload_id, _, _) = _multipart_upload(bucket_name=bucket, key=key, size=5 * mb)
+    s3_client.list_multipart_uploads(Bucket=bucket)
+    s3_client.abort_multipart_upload(Bucket=bucket, Key=key, UploadId=upload_id)
+
+    s3_client.delete_bucket(Bucket=bucket)
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Deny Multipart Actions in user Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_deny_multipart_actions_in_user_policy():
+    client = get_tenant_iam_client()
+    bucket = get_new_bucket()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Deny",
+             "Action": ["s3:ListBucketMultipartUploads", "s3:AbortMultipartUpload"],
+             "Resource": "arn:aws:s3:::*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='DenyAccessPolicy',
+                           UserName=get_tenant_user_id())
+    key = "mymultipart"
+    mb = 1024 * 1024
+    s3_client = get_client()
+    (upload_id, _, _) = _multipart_upload(bucket_name=bucket, key=key, size=5 * mb)
+
+    e = assert_raises(ClientError, s3_client.list_multipart_uploads, Bucket=bucket)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+
+    e = assert_raises(ClientError, s3_client.abort_multipart_upload, Bucket=bucket,
+                      Key=key, UploadId=upload_id)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+
     s3_client.delete_bucket(Bucket=bucket)
     client.delete_user_policy(PolicyName='DenyAccessPolicy', UserName=get_tenant_user_id())
