@@ -11,7 +11,7 @@ from . import (
     get_tenant_user_id,
     get_new_bucket,
     )
-from .utils import _get_status
+from .utils import _get_status, _get_status_and_error_code
 
 
 @attr(resource='user-policy')
