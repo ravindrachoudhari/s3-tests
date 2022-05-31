@@ -446,8 +446,6 @@ def test_allow_bucket_actions_in_user_policy():
         if bucket == response['Buckets'][index]['Name']:
             bucket_listed = True
             break
-        else:
-            continue
     if not bucket_listed:
         raise AssertionError("bucket is not listed")
 
@@ -458,8 +456,6 @@ def test_allow_bucket_actions_in_user_policy():
         if bucket == response['Buckets'][index]['Name']:
             bucket_listed = True
             break
-        else:
-            continue
     if bucket_listed:
         raise AssertionError("deleted bucket is getting listed")
     client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
