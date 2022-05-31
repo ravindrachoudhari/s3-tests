@@ -473,7 +473,7 @@ def test_allow_bucket_actions_in_user_policy():
 def test_deny_bucket_actions_in_user_policy():
     client = get_tenant_iam_client()
     bucket = get_new_bucket()
-    policy_document_allow = json.dumps(
+    policy_document_deny = json.dumps(
         {"Version": "2012-10-17",
          "Statement": {
              "Effect": "Deny",
@@ -481,7 +481,7 @@ def test_deny_bucket_actions_in_user_policy():
              "Resource": "arn:aws:s3:::*"}}
     )
 
-    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='DenyAccessPolicy',
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
                            UserName=get_tenant_user_id())
     s3_client = get_client()
 
@@ -541,14 +541,14 @@ def test_deny_object_actions_in_user_policy():
     client = get_tenant_iam_client()
     bucket = get_new_bucket()
 
-    policy_document_allow = json.dumps(
+    policy_document_deny = json.dumps(
         {"Version": "2012-10-17",
          "Statement": {
              "Effect": "Deny",
              "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
              "Resource": f"arn:aws:s3:::{bucket}/*"}}
     )
-    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='DenyAccessPolicy',
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
                            UserName=get_tenant_user_id())
 
     s3_client = get_client()
@@ -607,14 +607,14 @@ def test_deny_multipart_actions_in_user_policy():
     client = get_tenant_iam_client()
     bucket = get_new_bucket()
 
-    policy_document_allow = json.dumps(
+    policy_document_deny = json.dumps(
         {"Version": "2012-10-17",
          "Statement": {
              "Effect": "Deny",
              "Action": ["s3:ListBucketMultipartUploads", "s3:AbortMultipartUpload"],
              "Resource": "arn:aws:s3:::*"}}
     )
-    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='DenyAccessPolicy',
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
                            UserName=get_tenant_user_id())
     key = "mymultipart"
     mb = 1024 * 1024
@@ -632,5 +632,91 @@ def test_deny_multipart_actions_in_user_policy():
     eq(status, 403)
     eq(error_code, 'AccessDenied')
 
+    s3_client.delete_bucket(Bucket=bucket)
+    client.delete_user_policy(PolicyName='DenyAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Allow Tagging Actions in user Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_allow_tagging_actions_in_user_policy():
+    client = get_tenant_iam_client()
+    bucket = get_new_bucket()
+
+    policy_document_allow = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": ["s3:PutBucketTagging", "s3:GetBucketTagging",
+                        "s3:PutObjectTagging", "s3:GetObjectTagging"],
+             "Resource": f"arn:aws:s3:::*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
+                           UserName=get_tenant_user_id())
+    tags = {'TagSet': [{'Key': 'Hello', 'Value': 'World'}, ]}
+
+    s3_client = get_client()
+    s3_client.put_bucket_tagging(Bucket=bucket, Tagging=tags)
+    response = s3_client.get_bucket_tagging(Bucket=bucket)
+    eq(response['TagSet'][0]['Key'], 'Hello')
+    eq(response['TagSet'][0]['Value'], 'World')
+
+    obj_key = 'obj'
+    s3_client.put_object(Bucket=bucket, Key=obj_key, Body='obj_body')
+    s3_client.put_object_tagging(Bucket=bucket, Key=obj_key, Tagging=tags)
+    response = s3_client.get_object_tagging(Bucket=bucket, Key=obj_key)
+    eq(response['TagSet'], tags['TagSet'])
+
+    s3_client.delete_object(Bucket=bucket, Key=obj_key)
+    s3_client.delete_bucket(Bucket=bucket)
+    client.delete_user_policy(PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Deny Tagging Actions in user Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+def test_deny_tagging_actions_in_user_policy():
+    client = get_tenant_iam_client()
+    bucket = get_new_bucket()
+
+    policy_document_deny = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Deny",
+             "Action": ["s3:PutBucketTagging", "s3:GetBucketTagging",
+                        "s3:PutObjectTagging", "s3:DeleteObjectTagging"],
+             "Resource": "arn:aws:s3:::*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
+                           UserName=get_tenant_user_id())
+    tags = {'TagSet': [{'Key': 'Hello', 'Value': 'World'}, ]}
+
+    s3_client = get_client()
+    e = assert_raises(ClientError, s3_client.put_bucket_tagging, Bucket=bucket, Tagging=tags)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+    e = assert_raises(ClientError, s3_client.get_bucket_tagging, Bucket=bucket)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+
+    obj_key = 'obj'
+    s3_client.put_object(Bucket=bucket, Key=obj_key, Body='obj_body')
+
+    e = assert_raises(ClientError, s3_client.put_object_tagging, Bucket=bucket, Key=obj_key, Tagging=tags)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+    e = assert_raises(ClientError, s3_client.delete_object_tagging, Bucket=bucket, Key=obj_key)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+
+    s3_client.delete_object(Bucket=bucket, Key=obj_key)
     s3_client.delete_bucket(Bucket=bucket)
     client.delete_user_policy(PolicyName='DenyAccessPolicy', UserName=get_tenant_user_id())
