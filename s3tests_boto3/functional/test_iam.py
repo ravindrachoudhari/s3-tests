@@ -522,7 +522,6 @@ def test_allow_object_actions_in_user_policy():
     body = response['Body'].read()
     if type(body) is bytes:
         body = body.decode()
-        print("decode")
     eq(body, "bar")
     s3_client.delete_object(Bucket=bucket, Key='foo')
     e = assert_raises(ClientError, s3_client.get_object, Bucket=bucket, Key='foo')
