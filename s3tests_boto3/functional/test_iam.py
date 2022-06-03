@@ -630,16 +630,15 @@ def test_deny_object_actions_in_user_policy():
     client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
                            UserName=get_tenant_user_id())
 
-    obj_key = 'foo'
     e = assert_raises(ClientError, s3_client_tenant.put_object, Bucket=bucket, Key='foo')
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
-    e = assert_raises(ClientError, s3_client_tenant.get_object, Bucket=bucket, Key=obj_key)
+    e = assert_raises(ClientError, s3_client_tenant.get_object, Bucket=bucket, Key='foo')
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
-    e = assert_raises(ClientError, s3_client_tenant.delete_object, Bucket=bucket, Key=obj_key)
+    e = assert_raises(ClientError, s3_client_tenant.delete_object, Bucket=bucket, Key='foo')
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
