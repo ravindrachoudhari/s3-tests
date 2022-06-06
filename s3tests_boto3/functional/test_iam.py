@@ -11,7 +11,7 @@ from . import (
     get_iam_client,
     get_new_bucket,
     get_iam_s3client,
-    get_tenant_iam_client,
+    get_alt_iam_client,
     get_alt_user_id,
 )
 from .utils import _get_status, _get_status_and_error_code
@@ -532,8 +532,8 @@ def test_allow_object_actions_in_user_policy():
 def test_deny_object_actions_in_user_policy():
     client = get_iam_client()
     s3_client_alt = get_alt_client()
-    s3_client_iam = get_iam_s3client()
-    bucket = get_new_bucket(client=s3_client_iam)
+    bucket = get_new_bucket(client=s3_client_alt)
+    s3_client_alt.put_object(Bucket=bucket, Key='foo', Body='bar')
 
     policy_document_deny = json.dumps(
         {"Version": "2012-10-17",
@@ -561,8 +561,6 @@ def test_deny_object_actions_in_user_policy():
     eq(status, 403)
     eq(error_code, 'AccessDenied')
 
-    response = s3_client_iam.delete_bucket(Bucket=bucket)
-    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
                                          UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
@@ -842,16 +840,16 @@ def test_verify_allow_iam_actions():
                        "Resource": f"arn:aws:iam:::user/{get_alt_user_id()}"}}
     )
     client1 = get_iam_client()
-    iam_client_tenant = get_tenant_iam_client()
+    iam_client_alt = get_alt_iam_client()
 
     response = client1.put_user_policy(PolicyDocument=policy1, PolicyName='AllowAccessPolicy',
                                        UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = iam_client_tenant.get_user_policy(PolicyName='AllowAccessPolicy',
+    response = iam_client_alt.get_user_policy(PolicyName='AllowAccessPolicy',
                                        UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = iam_client_tenant.list_user_policies(UserName=get_alt_user_id())
+    response = iam_client_alt.list_user_policies(UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = iam_client_tenant.delete_user_policy(PolicyName='AllowAccessPolicy',
+    response = iam_client_alt.delete_user_policy(PolicyName='AllowAccessPolicy',
                                           UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
