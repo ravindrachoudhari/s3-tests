@@ -7,12 +7,12 @@ from nose.tools import eq_ as eq
 from s3tests.functional.utils import assert_raises
 from s3tests_boto3.functional.test_s3 import _multipart_upload
 from . import (
-    get_tenant_client,
+    get_alt_client,
     get_iam_client,
-    get_tenant_user_id,
     get_new_bucket,
     get_iam_s3client,
     get_tenant_iam_client,
+    get_alt_user_id,
 )
 from .utils import _get_status, _get_status_and_error_code
 
@@ -33,10 +33,10 @@ def test_put_user_policy():
              "Resource": "*"}}
     )
     response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.delete_user_policy(PolicyName='AllAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -78,7 +78,7 @@ def test_put_user_policy_parameter_limit():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy' * 10, UserName=get_tenant_user_id())
+                      PolicyName='AllAccessPolicy' * 10, UserName=get_alt_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -101,37 +101,7 @@ def test_put_user_policy_invalid_element():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
-    status = _get_status(e.response)
-    eq(status, 400)
-
-    # With no Statement
-    policy_document = json.dumps(
-        {
-            "Version": "2012-10-17"
-        }
-    )
-    e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
-    status = _get_status(e.response)
-    eq(status, 400)
-
-    # with same Sid for 2 statements
-    policy_document = json.dumps(
-        {"Version": "2012-10-17",
-         "Statement": [
-             {"Sid": "98AB54CF",
-              "Effect": "Allow",
-              "Action": "*",
-              "Resource": "*"},
-             {"Sid": "98AB54CF",
-              "Effect": "Allow",
-              "Action": "*",
-              "Resource": "*"}]
-         }
-    )
-    e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+                      PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -146,7 +116,7 @@ def test_put_user_policy_invalid_element():
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
-                      PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+                      PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
     status = _get_status(e.response)
     eq(status, 400)
 
@@ -168,11 +138,11 @@ def test_put_existing_user_policy():
          }
     )
     response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                           UserName=get_tenant_user_id())
-    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+                           UserName=get_alt_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
 
 
 @attr(resource='user-policy')
@@ -192,11 +162,11 @@ def test_list_user_policy():
          }
     )
     response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = client.list_user_policies(UserName=get_tenant_user_id())
+    response = client.list_user_policies(UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
 
 
 @attr(resource='user-policy')
@@ -227,13 +197,13 @@ def test_get_user_policy():
              "Resource": "*"}}
     )
     response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = client.get_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
+    response = client.get_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
     response = client.delete_user_policy(PolicyName='AllAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -253,65 +223,13 @@ def test_get_user_policy_invalid_user():
              "Resource": "*"}}
     )
     response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
                       UserName="some-non-existing-user-id")
     status = _get_status(e.response)
     eq(status, 404)
-    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
-
-
-@attr(resource='user-policy')
-@attr(method='get')
-@attr(operation='Verify Get User Policy with invalid policy name')
-@attr(assertion='succeeds')
-@attr('user-policy')
-def test_get_user_policy_invalid_policy_name():
-    client = get_iam_client()
-
-    policy_document = json.dumps(
-        {"Version": "2012-10-17",
-         "Statement": {
-             "Effect": "Allow",
-             "Action": "*",
-             "Resource": "*"}}
-    )
-    response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
-    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    e = assert_raises(ClientError, client.get_user_policy, PolicyName='non-existing-policy-name',
-                      UserName=get_tenant_user_id())
-    status = _get_status(e.response)
-    eq(status, 404)
-    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_tenant_user_id())
-
-
-@attr(resource='user-policy')
-@attr(method='get')
-@attr(operation='Verify Get Deleted User Policy')
-@attr(assertion='succeeds')
-@attr('user-policy')
-def test_get_deleted_user_policy():
-    client = get_iam_client()
-
-    policy_document = json.dumps(
-        {"Version": "2012-10-17",
-         "Statement": {
-             "Effect": "Allow",
-             "Action": "*",
-             "Resource": "*"}}
-    )
-    response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
-                                      UserName=get_tenant_user_id())
-    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = client.delete_user_policy(PolicyName='AllAccessPolicy',
-                                         UserName=get_tenant_user_id())
-    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
-                      UserName=get_tenant_user_id())
-    status = _get_status(e.response)
-    eq(status, 404)
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
 
 
 @attr(resource='user-policy')
@@ -332,21 +250,21 @@ def test_get_user_policy_from_multiple_policies():
 
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy1',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy2',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.get_user_policy(PolicyName='AllowAccessPolicy2',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy1',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy2',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -368,10 +286,10 @@ def test_delete_user_policy():
 
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -393,14 +311,14 @@ def test_delete_user_policy_invalid_user():
 
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     e = assert_raises(ClientError, client.delete_user_policy, PolicyName='AllAccessPolicy',
                       UserName="some-non-existing-user-id")
     status = _get_status(e.response)
     eq(status, 404)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -422,14 +340,14 @@ def test_delete_user_policy_invalid_policy_name():
 
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     e = assert_raises(ClientError, client.delete_user_policy, PolicyName='non-existing-policy-name',
-                      UserName=get_tenant_user_id())
+                      UserName=get_alt_user_id())
     status = _get_status(e.response)
     eq(status, 404)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -451,28 +369,28 @@ def test_delete_user_policy_from_multiple_policies():
 
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy1',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy2',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
                                       PolicyName='AllowAccessPolicy3',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy1',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy2',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.get_user_policy(PolicyName='AllowAccessPolicy3',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy3',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -483,7 +401,7 @@ def test_delete_user_policy_from_multiple_policies():
 @attr('user-policy')
 def test_allow_bucket_actions_in_user_policy():
     client = get_iam_client()
-    s3_client_tenant = get_tenant_client()
+    s3_client_alt = get_alt_client()
 
     s3_client_iam = get_iam_s3client()
     bucket = get_new_bucket(client=s3_client_iam)
@@ -498,10 +416,10 @@ def test_allow_bucket_actions_in_user_policy():
     )
 
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
-                                      PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+                                      PolicyName='AllowAccessPolicy', UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
-    response = s3_client_tenant.list_objects(Bucket=bucket)
+    response = s3_client_alt.list_objects(Bucket=bucket)
     object_found = False
     for object_received in response['Contents']:
         if "foo" == object_received['Key']:
@@ -513,7 +431,7 @@ def test_allow_bucket_actions_in_user_policy():
     response = s3_client_iam.delete_object(Bucket=bucket, Key='foo')
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
-    response = s3_client_tenant.delete_bucket(Bucket=bucket)
+    response = s3_client_alt.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
     response = s3_client_iam.list_buckets()
@@ -522,7 +440,7 @@ def test_allow_bucket_actions_in_user_policy():
             raise AssertionError("deleted bucket is getting listed")
 
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -533,7 +451,7 @@ def test_allow_bucket_actions_in_user_policy():
 @attr('user-policy')
 def test_deny_bucket_actions_in_user_policy():
     client = get_iam_client()
-    s3_client = get_tenant_client()
+    s3_client = get_alt_client()
     bucket = get_new_bucket(client=s3_client)
 
     policy_document_deny = json.dumps(
@@ -546,7 +464,7 @@ def test_deny_bucket_actions_in_user_policy():
 
     response = client.put_user_policy(PolicyDocument=policy_document_deny,
                                       PolicyName='DenyAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
     e = assert_raises(ClientError, s3_client.list_buckets, Bucket=bucket)
@@ -558,7 +476,7 @@ def test_deny_bucket_actions_in_user_policy():
     eq(status, 403)
     eq(error_code, 'AccessDenied')
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = s3_client.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
@@ -571,7 +489,7 @@ def test_deny_bucket_actions_in_user_policy():
 @attr('user-policy')
 def test_allow_object_actions_in_user_policy():
     client = get_iam_client()
-    s3_client_tenant = get_tenant_client()
+    s3_client_alt = get_alt_client()
     s3_client_iam = get_iam_s3client()
     bucket = get_new_bucket(client=s3_client_iam)
 
@@ -583,16 +501,16 @@ def test_allow_object_actions_in_user_policy():
              "Resource": f"arn:aws:s3:::{bucket}/*"}}
     )
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
-                                      PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+                                      PolicyName='AllowAccessPolicy', UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
-    s3_client_tenant.put_object(Bucket=bucket, Key='foo', Body='bar')
-    response = s3_client_tenant.get_object(Bucket=bucket, Key='foo')
+    s3_client_alt.put_object(Bucket=bucket, Key='foo', Body='bar')
+    response = s3_client_alt.get_object(Bucket=bucket, Key='foo')
     body = response['Body'].read()
     if type(body) is bytes:
         body = body.decode()
     eq(body, "bar")
-    response = s3_client_tenant.delete_object(Bucket=bucket, Key='foo')
+    response = s3_client_alt.delete_object(Bucket=bucket, Key='foo')
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
     e = assert_raises(ClientError, s3_client_iam.get_object, Bucket=bucket, Key='foo')
@@ -602,7 +520,7 @@ def test_allow_object_actions_in_user_policy():
     response = s3_client_iam.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -613,7 +531,7 @@ def test_allow_object_actions_in_user_policy():
 @attr('user-policy')
 def test_deny_object_actions_in_user_policy():
     client = get_iam_client()
-    s3_client_tenant = get_tenant_client()
+    s3_client_alt = get_alt_client()
     s3_client_iam = get_iam_s3client()
     bucket = get_new_bucket(client=s3_client_iam)
 
@@ -628,17 +546,17 @@ def test_deny_object_actions_in_user_policy():
              "Resource": f"arn:aws:s3:::{bucket}"}]}
     )
     client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
-                           UserName=get_tenant_user_id())
+                           UserName=get_alt_user_id())
 
-    e = assert_raises(ClientError, s3_client_tenant.put_object, Bucket=bucket, Key='foo')
+    e = assert_raises(ClientError, s3_client_alt.put_object, Bucket=bucket, Key='foo')
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
-    e = assert_raises(ClientError, s3_client_tenant.get_object, Bucket=bucket, Key='foo')
+    e = assert_raises(ClientError, s3_client_alt.get_object, Bucket=bucket, Key='foo')
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
-    e = assert_raises(ClientError, s3_client_tenant.delete_object, Bucket=bucket, Key='foo')
+    e = assert_raises(ClientError, s3_client_alt.delete_object, Bucket=bucket, Key='foo')
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
@@ -646,7 +564,7 @@ def test_deny_object_actions_in_user_policy():
     response = s3_client_iam.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -657,7 +575,7 @@ def test_deny_object_actions_in_user_policy():
 @attr('user-policy')
 def test_allow_multipart_actions_in_user_policy():
     client = get_iam_client()
-    s3_client_tenant = get_tenant_client()
+    s3_client_alt = get_alt_client()
     s3_client_iam = get_iam_s3client()
     bucket = get_new_bucket(client=s3_client_iam)
 
@@ -669,22 +587,22 @@ def test_allow_multipart_actions_in_user_policy():
              "Resource": "arn:aws:s3:::*"}}
     )
     response = client.put_user_policy(PolicyDocument=policy_document_allow,
-                                      PolicyName='AllowAccessPolicy', UserName=get_tenant_user_id())
+                                      PolicyName='AllowAccessPolicy', UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     key = "mymultipart"
     mb = 1024 * 1024
 
     (upload_id, _, _) = _multipart_upload(client=s3_client_iam, bucket_name=bucket, key=key,
                                           size=5 * mb)
-    response = s3_client_tenant.list_multipart_uploads(Bucket=bucket)
+    response = s3_client_alt.list_multipart_uploads(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = s3_client_tenant.abort_multipart_upload(Bucket=bucket, Key=key, UploadId=upload_id)
+    response = s3_client_alt.abort_multipart_upload(Bucket=bucket, Key=key, UploadId=upload_id)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
 
     response = s3_client_iam.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -695,7 +613,7 @@ def test_allow_multipart_actions_in_user_policy():
 @attr('user-policy')
 def test_deny_multipart_actions_in_user_policy():
     client = get_iam_client()
-    s3_client = get_tenant_client()
+    s3_client = get_alt_client()
     bucket = get_new_bucket(client=s3_client)
 
     policy_document_deny = json.dumps(
@@ -707,7 +625,7 @@ def test_deny_multipart_actions_in_user_policy():
     )
     response = client.put_user_policy(PolicyDocument=policy_document_deny,
                                       PolicyName='DenyAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     key = "mymultipart"
     mb = 1024 * 1024
@@ -729,7 +647,7 @@ def test_deny_multipart_actions_in_user_policy():
     response = s3_client.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -740,7 +658,7 @@ def test_deny_multipart_actions_in_user_policy():
 @attr('user-policy')
 def test_allow_tagging_actions_in_user_policy():
     client = get_iam_client()
-    s3_client_tenant = get_tenant_client()
+    s3_client_alt = get_alt_client()
     s3_client_iam = get_iam_s3client()
     bucket = get_new_bucket(client=s3_client_iam)
 
@@ -753,12 +671,12 @@ def test_allow_tagging_actions_in_user_policy():
              "Resource": f"arn:aws:s3:::*"}}
     )
     client.put_user_policy(PolicyDocument=policy_document_allow, PolicyName='AllowAccessPolicy',
-                           UserName=get_tenant_user_id())
+                           UserName=get_alt_user_id())
     tags = {'TagSet': [{'Key': 'Hello', 'Value': 'World'}, ]}
 
-    response = s3_client_tenant.put_bucket_tagging(Bucket=bucket, Tagging=tags)
+    response = s3_client_alt.put_bucket_tagging(Bucket=bucket, Tagging=tags)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = s3_client_tenant.get_bucket_tagging(Bucket=bucket)
+    response = s3_client_alt.get_bucket_tagging(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     eq(response['TagSet'][0]['Key'], 'Hello')
     eq(response['TagSet'][0]['Value'], 'World')
@@ -766,9 +684,9 @@ def test_allow_tagging_actions_in_user_policy():
     obj_key = 'obj'
     response = s3_client_iam.put_object(Bucket=bucket, Key=obj_key, Body='obj_body')
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = s3_client_tenant.put_object_tagging(Bucket=bucket, Key=obj_key, Tagging=tags)
+    response = s3_client_alt.put_object_tagging(Bucket=bucket, Key=obj_key, Tagging=tags)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = s3_client_tenant.get_object_tagging(Bucket=bucket, Key=obj_key)
+    response = s3_client_alt.get_object_tagging(Bucket=bucket, Key=obj_key)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     eq(response['TagSet'], tags['TagSet'])
 
@@ -777,7 +695,7 @@ def test_allow_tagging_actions_in_user_policy():
     response = s3_client_iam.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -788,7 +706,7 @@ def test_allow_tagging_actions_in_user_policy():
 @attr('user-policy')
 def test_deny_tagging_actions_in_user_policy():
     client = get_iam_client()
-    s3_client = get_tenant_client()
+    s3_client = get_alt_client()
     bucket = get_new_bucket(client=s3_client)
 
     policy_document_deny = json.dumps(
@@ -800,7 +718,7 @@ def test_deny_tagging_actions_in_user_policy():
              "Resource": "arn:aws:s3:::*"}}
     )
     client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
-                           UserName=get_tenant_user_id())
+                           UserName=get_alt_user_id())
     tags = {'TagSet': [{'Key': 'Hello', 'Value': 'World'}, ]}
 
     e = assert_raises(ClientError, s3_client.put_bucket_tagging, Bucket=bucket, Tagging=tags)
@@ -831,7 +749,7 @@ def test_deny_tagging_actions_in_user_policy():
     response = s3_client.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -841,7 +759,7 @@ def test_deny_tagging_actions_in_user_policy():
 @attr(assertion='succeeds')
 @attr('user-policy')
 def test_verify_conflicting_user_policy_statements():
-    s3client = get_tenant_client()
+    s3client = get_alt_client()
     bucket = get_new_bucket(client=s3client)
     policy_document = json.dumps(
         {"Version": "2012-10-17",
@@ -858,14 +776,14 @@ def test_verify_conflicting_user_policy_statements():
     )
     client = get_iam_client()
     response = client.put_user_policy(PolicyDocument=policy_document, PolicyName='DenyAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     e = assert_raises(ClientError, s3client.list_objects, Bucket=bucket)
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -875,7 +793,7 @@ def test_verify_conflicting_user_policy_statements():
 @attr(assertion='succeeds')
 @attr('user-policy')
 def test_verify_conflicting_user_policies():
-    s3client = get_tenant_client()
+    s3client = get_alt_client()
     bucket = get_new_bucket(client=s3client)
     policy_allow = json.dumps(
         {"Version": "2012-10-17",
@@ -893,20 +811,20 @@ def test_verify_conflicting_user_policies():
     )
     client = get_iam_client()
     response = client.put_user_policy(PolicyDocument=policy_allow, PolicyName='AllowAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.put_user_policy(PolicyDocument=policy_deny, PolicyName='DenyAccessPolicy',
-                                      UserName=get_tenant_user_id())
+                                      UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     e = assert_raises(ClientError, s3client.list_objects, Bucket=bucket)
     status, error_code = _get_status_and_error_code(e.response)
     eq(status, 403)
     eq(error_code, 'AccessDenied')
     response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
-                                         UserName=get_tenant_user_id())
+                                         UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
 
 
@@ -921,19 +839,19 @@ def test_verify_allow_iam_actions():
                        "Effect": "Allow",
                        "Action": ["iam:PutUserPolicy", "iam:GetUserPolicy",
                                   "iam:ListUserPolicies", "iam:DeleteUserPolicy"],
-                       "Resource": f"arn:aws:iam:::user/{get_tenant_user_id()}"}}
+                       "Resource": f"arn:aws:iam:::user/{get_alt_user_id()}"}}
     )
     client1 = get_iam_client()
     iam_client_tenant = get_tenant_iam_client()
 
     response = client1.put_user_policy(PolicyDocument=policy1, PolicyName='AllowAccessPolicy',
-                                       UserName=get_tenant_user_id())
+                                       UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = iam_client_tenant.get_user_policy(PolicyName='AllowAccessPolicy',
-                                       UserName=get_tenant_user_id())
+                                       UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
-    response = iam_client_tenant.list_user_policies(UserName=get_tenant_user_id())
+    response = iam_client_tenant.list_user_policies(UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
     response = iam_client_tenant.delete_user_policy(PolicyName='AllowAccessPolicy',
-                                          UserName=get_tenant_user_id())
+                                          UserName=get_alt_user_id())
     eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
