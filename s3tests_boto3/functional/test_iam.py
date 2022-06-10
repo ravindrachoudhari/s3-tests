@@ -88,6 +88,7 @@ def test_put_user_policy_parameter_limit():
 @attr(operation='Verify Put User Policy using invalid policy document elements')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('fails_on_rgw')
 def test_put_user_policy_invalid_element():
     client = get_iam_client()
 
@@ -98,6 +99,36 @@ def test_put_user_policy_invalid_element():
              "Effect": "Allow",
              "Action": "*",
              "Resource": "*"}]
+         }
+    )
+    e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
+                      PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
+    status = _get_status(e.response)
+    eq(status, 400)
+
+    # With no Statement
+    policy_document = json.dumps(
+        {
+            "Version": "2012-10-17",
+        }
+    )
+    e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
+                      PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
+    status = _get_status(e.response)
+    eq(status, 400)
+
+    # with same Sid for 2 statements
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": [
+             {"Sid": "98AB54CF",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"},
+             {"Sid": "98AB54CF",
+              "Effect": "Allow",
+              "Action": "*",
+              "Resource": "*"}]
          }
     )
     e = assert_raises(ClientError, client.put_user_policy, PolicyDocument=policy_document,
@@ -230,6 +261,56 @@ def test_get_user_policy_invalid_user():
     status = _get_status(e.response)
     eq(status, 404)
     client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get User Policy with invalid policy name')
+@attr(assertion='succeeds')
+@attr('user-policy')
+@attr('fails_on_rgw')
+def test_get_user_policy_invalid_policy_name():
+    client = get_iam_client()
+
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
+                           UserName=get_alt_user_id())
+    e = assert_raises(ClientError, client.get_user_policy, PolicyName='non-existing-policy-name',
+                      UserName=get_alt_user_id())
+    status = _get_status(e.response)
+    eq(status, 404)
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
+
+
+@attr(resource='user-policy')
+@attr(method='get')
+@attr(operation='Verify Get Deleted User Policy')
+@attr(assertion='succeeds')
+@attr('user-policy')
+@attr('fails_on_rgw')
+def test_get_deleted_user_policy():
+    client = get_iam_client()
+
+    policy_document = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "*",
+             "Resource": "*"}}
+    )
+    client.put_user_policy(PolicyDocument=policy_document, PolicyName='AllAccessPolicy',
+                           UserName=get_alt_user_id())
+    client.delete_user_policy(PolicyName='AllAccessPolicy', UserName=get_alt_user_id())
+    e = assert_raises(ClientError, client.get_user_policy, PolicyName='AllAccessPolicy',
+                      UserName=get_alt_user_id())
+    status = _get_status(e.response)
+    eq(status, 404)
 
 
 @attr(resource='user-policy')
