@@ -76,7 +76,7 @@ In order to run any STS test you'll need to add "iam" section to the config file
  IAM policy tests
 ========================
 
-This is a set of IAM policy tests. tests use the Boto2 and Boto3 libraries.
+This is a set of IAM policy tests. Tests use the Boto2 and Boto3 libraries.
 
 The tests use the Nose test framework. To get started, ensure you have
 the ``virtualenv`` software installed; e.g. on Debian/Ubuntu::
@@ -93,12 +93,12 @@ service and two different credentials. A sample configuration file named
 used to run the iam policy tests on a Ceph cluster started with vstart.
 
 Note: These iam policy tests uses two users, "iam" and "s3 alt" as mentioned in s3tests.conf.SAMPLE.
-Out of those two users, "iam" user is with --caps=user-policy=* and "s3 alt" user is without caps.
+Out of those two users, "iam" user is with capabilities --caps=user-policy=* and "s3 alt" user is without capabilities.
 
 Once you have that file copied and edited, you can run the tests with::
 	S3TEST_CONF=your.conf ./virtualenv/bin/nosetests s3tests_boto3.functional.test_iam
 
-You can specify which test to run::
+You can also specify specific test to run::
 
 	S3TEST_CONF=your.conf ./virtualenv/bin/nosetests s3tests_boto3.functional.test_iam:test_put_user_policy
 
