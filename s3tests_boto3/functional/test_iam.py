@@ -1291,3 +1291,92 @@ def test_deny_principal_type_condition_in_user_policy():
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = s3_client_alt.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Allow Bucket Actions with max-keys condition statements')
+@attr(assertion='succeeds')
+@attr('user-policy')
+@attr('test_of_iam')
+def test_allow_max_keys_condition_in_user_policy():
+    client = get_iam_client()
+    s3_client_iam = get_iam_s3client()
+    s3_client_alt = get_alt_client()
+    bucket = get_new_bucket(client=s3_client_iam)
+    s3_client_iam.put_object(Bucket=bucket, Key='foo', Body='bar')
+    s3_client_iam.put_object(Bucket=bucket, Key='foo1', Body='bar')
+    s3_client_iam.put_object(Bucket=bucket, Key='foo2', Body='bar')
+
+    policy_document_deny = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "s3:ListBucket",
+             "Resource": f"arn:aws:s3:::{bucket}",
+             "Condition": {"NumericLessThanEquals": {"s3:max-keys": "3"}}
+                        }
+         }
+    )
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='AllowAccessPolicy',
+                           UserName=get_alt_user_id())
+    response = s3_client_alt.list_objects(Bucket=bucket, MaxKeys=2)
+
+    if len(response['Contents']) > 2:
+        AssertionError("Number of objects listed are more than MaxKeys")
+
+    response = s3_client_iam.delete_object(Bucket=bucket, Key='foo')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_iam.delete_object(Bucket=bucket, Key='foo1')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_iam.delete_object(Bucket=bucket, Key='foo2')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_iam.delete_bucket(Bucket=bucket)
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
+                                         UserName=get_alt_user_id())
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Deny Bucket Actions with max-keys condition statements')
+@attr(assertion='succeeds')
+@attr('user-policy')
+@attr('test_of_iam')
+def test_deny_max_keys_condition_in_user_policy():
+    client = get_iam_client()
+    s3_client_alt = get_alt_client()
+    bucket = get_new_bucket(client=s3_client_alt)
+    s3_client_alt.put_object(Bucket=bucket, Key='foo', Body='bar')
+    s3_client_alt.put_object(Bucket=bucket, Key='foo1', Body='bar')
+    s3_client_alt.put_object(Bucket=bucket, Key='foo2', Body='bar')
+
+    policy_document_deny = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Deny",
+             "Action": "s3:ListBucket",
+             "Resource": f"arn:aws:s3:::{bucket}",
+             "Condition": {"NumericGreaterThan": {"s3:max-keys": "2"}}
+                        }
+         }
+    )
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
+                           UserName=get_alt_user_id())
+    e = assert_raises(ClientError, s3_client_alt.list_objects, Bucket=bucket, MaxKeys=3)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+
+    response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
+                                         UserName=get_alt_user_id())
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
+    response = s3_client_alt.delete_object(Bucket=bucket, Key='foo')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_alt.delete_object(Bucket=bucket, Key='foo1')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_alt.delete_object(Bucket=bucket, Key='foo2')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_alt.delete_bucket(Bucket=bucket)
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
