@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 from nose.plugins.attrib import attr
 from nose.tools import eq_ as eq
 
-from s3tests.functional.utils import assert_raises
+from s3tests_boto3.functional.utils import assert_raises
 from s3tests_boto3.functional.test_s3 import _multipart_upload
 from . import (
     get_alt_client,

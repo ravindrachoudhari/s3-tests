@@ -76,7 +76,7 @@ In order to run any STS test you'll need to add "iam" section to the config file
  IAM policy tests
 ========================
 
-This is a set of IAM policy tests. Tests use the Boto2 and Boto3 libraries.
+This is a set of IAM policy tests. Tests use the Boto3 libraries.
 
 The tests use the Nose test framework. To get started, ensure you have
 the ``virtualenv`` software installed; e.g. on Debian/Ubuntu::
