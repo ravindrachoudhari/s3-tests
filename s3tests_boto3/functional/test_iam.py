@@ -22,6 +22,7 @@ from .utils import _get_status, _get_status_and_error_code
 @attr(operation='Verify Put User Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_put_user_policy():
     client = get_iam_client()
 
@@ -45,6 +46,7 @@ def test_put_user_policy():
 @attr(operation='Verify Put User Policy with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_put_user_policy_invalid_user():
     client = get_iam_client()
 
@@ -66,6 +68,7 @@ def test_put_user_policy_invalid_user():
 @attr(operation='Verify Put User Policy using parameter value outside limit')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_put_user_policy_parameter_limit():
     client = get_iam_client()
 
@@ -88,6 +91,7 @@ def test_put_user_policy_parameter_limit():
 @attr(operation='Verify Put User Policy using invalid policy document elements')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 @attr('fails_on_rgw')
 def test_put_user_policy_invalid_element():
     client = get_iam_client()
@@ -157,6 +161,7 @@ def test_put_user_policy_invalid_element():
 @attr(operation='Verify Put a policy that already exists')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_put_existing_user_policy():
     client = get_iam_client()
 
@@ -181,6 +186,7 @@ def test_put_existing_user_policy():
 @attr(operation='Verify List User policies')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_list_user_policy():
     client = get_iam_client()
 
@@ -205,6 +211,7 @@ def test_list_user_policy():
 @attr(operation='Verify List User policies with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_list_user_policy_invalid_user():
     client = get_iam_client()
     e = assert_raises(ClientError, client.list_user_policies, UserName="some-non-existing-user-id")
@@ -217,6 +224,7 @@ def test_list_user_policy_invalid_user():
 @attr(operation='Verify Get User policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_get_user_policy():
     client = get_iam_client()
 
@@ -243,6 +251,7 @@ def test_get_user_policy():
 @attr(operation='Verify Get User Policy with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_get_user_policy_invalid_user():
     client = get_iam_client()
 
@@ -268,6 +277,7 @@ def test_get_user_policy_invalid_user():
 @attr(operation='Verify Get User Policy with invalid policy name')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 @attr('fails_on_rgw')
 def test_get_user_policy_invalid_policy_name():
     client = get_iam_client()
@@ -293,6 +303,7 @@ def test_get_user_policy_invalid_policy_name():
 @attr(operation='Verify Get Deleted User Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 @attr('fails_on_rgw')
 def test_get_deleted_user_policy():
     client = get_iam_client()
@@ -318,6 +329,7 @@ def test_get_deleted_user_policy():
 @attr(operation='Verify Get a policy from multiple policies for a user')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_get_user_policy_from_multiple_policies():
     client = get_iam_client()
 
@@ -354,6 +366,7 @@ def test_get_user_policy_from_multiple_policies():
 @attr(operation='Verify Delete User Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_delete_user_policy():
     client = get_iam_client()
 
@@ -379,6 +392,7 @@ def test_delete_user_policy():
 @attr(operation='Verify Delete User Policy with invalid user')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_delete_user_policy_invalid_user():
     client = get_iam_client()
 
@@ -408,6 +422,7 @@ def test_delete_user_policy_invalid_user():
 @attr(operation='Verify Delete User Policy with invalid policy name')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_delete_user_policy_invalid_policy_name():
     client = get_iam_client()
 
@@ -437,6 +452,7 @@ def test_delete_user_policy_invalid_policy_name():
 @attr(operation='Verify Delete multiple User policies for a user')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_delete_user_policy_from_multiple_policies():
     client = get_iam_client()
 
@@ -480,6 +496,7 @@ def test_delete_user_policy_from_multiple_policies():
 @attr(operation='Verify Allow Bucket Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_allow_bucket_actions_in_user_policy():
     client = get_iam_client()
     s3_client_alt = get_alt_client()
@@ -530,6 +547,7 @@ def test_allow_bucket_actions_in_user_policy():
 @attr(operation='Verify Deny Bucket Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_deny_bucket_actions_in_user_policy():
     client = get_iam_client()
     s3_client = get_alt_client()
@@ -568,6 +586,7 @@ def test_deny_bucket_actions_in_user_policy():
 @attr(operation='Verify Allow Object Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_allow_object_actions_in_user_policy():
     client = get_iam_client()
     s3_client_alt = get_alt_client()
@@ -610,6 +629,7 @@ def test_allow_object_actions_in_user_policy():
 @attr(operation='Verify Deny Object Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_deny_object_actions_in_user_policy():
     client = get_iam_client()
     s3_client_alt = get_alt_client()
@@ -652,6 +672,7 @@ def test_deny_object_actions_in_user_policy():
 @attr(operation='Verify Allow Multipart Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_allow_multipart_actions_in_user_policy():
     client = get_iam_client()
     s3_client_alt = get_alt_client()
@@ -690,6 +711,7 @@ def test_allow_multipart_actions_in_user_policy():
 @attr(operation='Verify Deny Multipart Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_deny_multipart_actions_in_user_policy():
     client = get_iam_client()
     s3_client = get_alt_client()
@@ -735,6 +757,7 @@ def test_deny_multipart_actions_in_user_policy():
 @attr(operation='Verify Allow Tagging Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_allow_tagging_actions_in_user_policy():
     client = get_iam_client()
     s3_client_alt = get_alt_client()
@@ -783,6 +806,7 @@ def test_allow_tagging_actions_in_user_policy():
 @attr(operation='Verify Deny Tagging Actions in user Policy')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_deny_tagging_actions_in_user_policy():
     client = get_iam_client()
     s3_client = get_alt_client()
@@ -837,6 +861,7 @@ def test_deny_tagging_actions_in_user_policy():
 @attr(operation='Verify conflicting user policy statements')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_verify_conflicting_user_policy_statements():
     s3client = get_alt_client()
     bucket = get_new_bucket(client=s3client)
@@ -871,6 +896,7 @@ def test_verify_conflicting_user_policy_statements():
 @attr(operation='Verify conflicting user policies')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_verify_conflicting_user_policies():
     s3client = get_alt_client()
     bucket = get_new_bucket(client=s3client)
@@ -911,6 +937,7 @@ def test_verify_conflicting_user_policies():
 @attr(operation='Verify Allow Actions for IAM user policies')
 @attr(assertion='succeeds')
 @attr('user-policy')
+@attr('test_of_iam')
 def test_verify_allow_iam_actions():
     policy1 = json.dumps(
         {"Version": "2012-10-17",
