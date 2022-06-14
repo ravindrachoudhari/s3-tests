@@ -1,4 +1,5 @@
 import json
+import datetime
 
 from botocore.exceptions import ClientError
 from nose.plugins.attrib import attr
@@ -1377,6 +1378,90 @@ def test_deny_max_keys_condition_in_user_policy():
     response = s3_client_alt.delete_object(Bucket=bucket, Key='foo1')
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = s3_client_alt.delete_object(Bucket=bucket, Key='foo2')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_alt.delete_bucket(Bucket=bucket)
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Allow Bucket Actions with CurrentTime condition statements')
+@attr(assertion='succeeds')
+@attr('user-policy')
+@attr('test_of_iam')
+def test_allow_current_time_condition_in_user_policy():
+    client = get_iam_client()
+    s3_client_iam = get_iam_s3client()
+    s3_client_alt = get_alt_client()
+    bucket = get_new_bucket(client=s3_client_iam)
+    s3_client_iam.put_object(Bucket=bucket, Key='foo', Body='bar')
+    current_date_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    policy_document_deny = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Allow",
+             "Action": "s3:ListBucket",
+             "Resource": f"arn:aws:s3:::{bucket}",
+             "Condition": {"DateGreaterThanEquals": {"aws:CurrentTime": current_date_time}}
+                        }
+         }
+    )
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='AllowAccessPolicy',
+                           UserName=get_alt_user_id())
+    response = s3_client_alt.list_objects(Bucket=bucket)
+    object_found = False
+    for object_received in response['Contents']:
+        if "foo" == object_received['Key']:
+            object_found = True
+            break
+    if not object_found:
+        raise AssertionError("Object is not listed")
+
+    response = s3_client_iam.delete_object(Bucket=bucket, Key='foo')
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = s3_client_iam.delete_bucket(Bucket=bucket)
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
+    response = client.delete_user_policy(PolicyName='AllowAccessPolicy',
+                                         UserName=get_alt_user_id())
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
+
+
+@attr(resource='user-policy')
+@attr(method='s3 Actions')
+@attr(operation='Verify Deny Bucket Actions with CurrentTime condition statements')
+@attr(assertion='succeeds')
+@attr('user-policy')
+@attr('test_of_iam')
+def test_deny_current_time_condition_in_user_policy():
+    client = get_iam_client()
+    s3_client_alt = get_alt_client()
+    bucket = get_new_bucket(client=s3_client_alt)
+    s3_client_alt.put_object(Bucket=bucket, Key='foo', Body='bar')
+    current_date_time = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    policy_document_deny = json.dumps(
+        {"Version": "2012-10-17",
+         "Statement": {
+             "Effect": "Deny",
+             "Action": "s3:ListBucket",
+             "Resource": f"arn:aws:s3:::{bucket}",
+             "Condition": {"DateGreaterThanEquals": {"aws:CurrentTime": current_date_time}}
+                        }
+         }
+    )
+    client.put_user_policy(PolicyDocument=policy_document_deny, PolicyName='DenyAccessPolicy',
+                           UserName=get_alt_user_id())
+
+    e = assert_raises(ClientError, s3_client_alt.list_objects, Bucket=bucket)
+    status, error_code = _get_status_and_error_code(e.response)
+    eq(status, 403)
+    eq(error_code, 'AccessDenied')
+
+    response = client.delete_user_policy(PolicyName='DenyAccessPolicy',
+                                         UserName=get_alt_user_id())
+    eq(response['ResponseMetadata']['HTTPStatusCode'], 200)
+    response = s3_client_alt.delete_object(Bucket=bucket, Key='foo')
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
     response = s3_client_alt.delete_bucket(Bucket=bucket)
     eq(response['ResponseMetadata']['HTTPStatusCode'], 204)
