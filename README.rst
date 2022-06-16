@@ -80,7 +80,7 @@ This is a set of IAM policy tests.
 This section covers tests for user policies such as Put, Get, List, Delete, user policies with s3 actions, conflicting user policies etc
 These tests uses Boto3 libraries. Tests are written in the ``s3test_boto3`` directory.
 
-These iam policy tests uses two users. users with profile name "iam" and "s3 alt" as mentioned in s3tests.conf.SAMPLE.
+These iam policy tests uses two users with profile name "iam" and "s3 alt" as mentioned in s3tests.conf.SAMPLE.
 If Ceph cluster is started with vstart, then above two users will get created as part of vstart with same access key, secrete key etc as mentioned in s3tests.conf.SAMPLE.
 Out of those two users, "iam" user is with capabilities --caps=user-policy=* and "s3 alt" user is without capabilities.
 Adding above capabilities to "iam" user is also taken care by vstart (If Ceph cluster is started with vstart).
