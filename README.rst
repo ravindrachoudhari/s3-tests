@@ -76,40 +76,26 @@ In order to run any STS test you'll need to add "iam" section to the config file
  IAM policy tests
 ========================
 
-This is a set of IAM policy tests. Tests use the Boto3 libraries.
+This is a set of IAM policy tests.
+This section covers tests for user policies such as Put, Get, List, Delete, user policies with s3 actions, conflicting user policies etc
+These tests uses Boto3 libraries. Tests are written in the ``s3test_boto3`` directory.
 
-The tests use the Nose test framework. To get started, ensure you have
-the ``virtualenv`` software installed; e.g. on Debian/Ubuntu::
-
-	sudo apt-get install python-virtualenv
-
-and then run::
-
-	./bootstrap
-
-You will need to create a configuration file with the location of the
-service and two different credentials. A sample configuration file named
-``s3tests.conf.SAMPLE`` has been provided in this repo. This file can be
-used to run the iam policy tests on a Ceph cluster started with vstart.
-
-Note: These iam policy tests uses two users, "iam" and "s3 alt" as mentioned in s3tests.conf.SAMPLE.
+These iam policy tests uses two users. users with profile name "iam" and "s3 alt" as mentioned in s3tests.conf.SAMPLE.
+If Ceph cluster is started with vstart, then above two users will get created as part of vstart with same access key and secrete key as mentioned in s3tests.conf.SAMPLE.
 Out of those two users, "iam" user is with capabilities --caps=user-policy=* and "s3 alt" user is without capabilities.
+Adding above capabilities to "iam" user is also taken care by vstart (If Ceph cluster is started with vstart).
 
-Once you have that file copied and edited, you can run the tests with::
+To run these tests, create configuration file with section "iam" and "s3 alt" refer s3tests.conf.SAMPLE.
+Once you have that configuration file copied and edited, you can run all the tests with::
+
 	S3TEST_CONF=your.conf ./virtualenv/bin/nosetests s3tests_boto3.functional.test_iam
 
 You can also specify specific test to run::
 
 	S3TEST_CONF=your.conf ./virtualenv/bin/nosetests s3tests_boto3.functional.test_iam:test_put_user_policy
 
-To gather a list of tests being run, use the flags::
-
-	 -v --collect-only
-
 Some tests have attributes set such as "fails_on_rgw".
 You can filter tests based on their attributes::
 
 	S3TEST_CONF=your.conf ./virtualenv/bin/nosetests s3tests_boto3.functional.test_iam -a '!fails_on_rgw'
 
-These tests have Boto3 version.
-Tests are written in the ``s3test_boto3`` directory.
