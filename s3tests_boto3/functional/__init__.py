@@ -499,7 +499,7 @@ def get_tenant_iam_client():
 def get_alt_iam_client():
 
     client = boto3.client(service_name='iam',
-                          region_name='us-east-1',
+                          region_name='',
                           aws_access_key_id=config.alt_access_key,
                           aws_secret_access_key=config.alt_secret_key,
                           endpoint_url=config.default_endpoint,
