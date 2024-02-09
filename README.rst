@@ -1,4 +1,7 @@
 ========================
+Disclaimer: This project is not maintained anymore
+========================
+========================
  S3 compatibility tests
 ========================
 
